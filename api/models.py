@@ -13,3 +13,6 @@ class User(AbstractUser):
     role = models.CharField(
         max_length=9, blank=False, choices=UserRole.choices, default=UserRole.USER
     )
+
+    # USERNAME_FIELD = 'email'
+    # REQUIRED_FIELDS = []

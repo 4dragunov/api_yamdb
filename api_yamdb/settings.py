@@ -128,7 +128,7 @@ AUTH_USER_MODEL = 'api.User'
 
 REST_FRAMEWORK = {
         'DEFAULT_PERMISSION_CLASSES': [
-            'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+            'rest_framework.permissions.AllowAny',
         ],
 
         'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -138,3 +138,6 @@ REST_FRAMEWORK = {
         ],
         'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
+
+EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
+EMAIL_FILE_PATH = os.path.join(BASE_DIR, "sent_emails")
