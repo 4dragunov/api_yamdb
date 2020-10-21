@@ -7,7 +7,6 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework import status
 
 from rest_framework.response import Response
-from rest_framework_jwt.settings import api_settings
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -16,8 +15,6 @@ from .serializers import UserSerializer, UserEmailSerializer, \
 
 from .models import User
 
-JWT_PAYLOAD_HANDLER = api_settings.JWT_PAYLOAD_HANDLER
-JWT_ENCODE_HANDLER = api_settings.JWT_ENCODE_HANDLER
 
 
 def id_generator(size=20, chars=string.ascii_uppercase + string.digits):
