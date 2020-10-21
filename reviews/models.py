@@ -1,6 +1,7 @@
 from django.db import models
 from users import User
 from titles import Title
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 
 class Review(models.Model):
@@ -15,13 +16,13 @@ class Review(models.Model):
         related_name="reviews",
         verbose_name="Автор",
     )
-
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
         related_name="reviews",
         verbose_name="Произведение",
     )
+    score = models.IntegerField(validators=[MaxValueValidator(10), MinValueValidator(1)])
 
     class Meta:
         ordering = ["-pub_date"]
