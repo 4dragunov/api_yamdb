@@ -4,7 +4,9 @@ import string
 from django.contrib.auth import authenticate
 from django.core.mail import send_mail
 from django.shortcuts import render, get_object_or_404
-from rest_framework import status
+from rest_framework import status, viewsets
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -61,3 +63,28 @@ class UserLoginView(APIView):
                 status=status.HTTP_200_OK
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    '''Модель обработки запросов user'''
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
+
+
+    def retrieve(self, request, *args, **kwargs):
+        '''
+        Получение информации о пользователе GET запрос /api/v1/users/{
+        username}
+        '''
+        username = self.kwargs['pk']
+        if self.kwargs['pk'] == 'me':
+            user = self.request.user
+            serializer = UserSerializer(user)
+            return Response(serializer.data)
+        user = get_object_or_404(User, username=username)
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+

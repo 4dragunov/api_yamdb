@@ -3,6 +3,10 @@ from rest_framework import serializers
 from .models import User
 
 class UserSerializer(serializers.ModelSerializer):
+    # username = serializers.SlugRelatedField(
+    #     read_only=True,
+    #     slug_field='username'
+    # )
 
     class Meta:
         model = User
@@ -19,12 +23,12 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserEmailSerializer(serializers.Serializer):
-    """Сериализатор email пользователя"""
+    """Сериализатор email пользователя для выдачи секретного кода"""
     email = serializers.EmailField(required=True)
 
 
 class UserLoginSerializer(serializers.Serializer):
-    """Сериализатор email пользователя"""
+    """Сериализатор email и секретного кода пользователя для JWT"""
     email = serializers.EmailField(required=True)
     secret = serializers.CharField(required=True)
 
