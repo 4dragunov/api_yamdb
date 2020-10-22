@@ -4,6 +4,7 @@ import string
 from django.core.mail import send_mail
 from django.shortcuts import render
 # from .permissions import IsOwnerOrReadOnly
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import permissions, status
 from django.shortcuts import get_object_or_404
@@ -16,6 +17,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.models import User
 from .models import Title
+from .permissions import IsAdmin
 from .serializers import ReviewSerializer, CommentSerializer, \
     UserEmailSerializer, UserLoginSerializer, UserSerializer
 
@@ -113,34 +115,55 @@ class UserViewSet(viewsets.ModelViewSet):
     '''Модель обработки запросов user'''
     serializer_class = UserSerializer
     queryset = User.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdmin, IsAuthenticated]
     pagination_class = PageNumberPagination
+    lookup_field = "username"
 
+    @action(detail=False, methods=['PATCH', 'GET'],
+            permission_classes=(IsAuthenticated,))
+    def me(self, request, ):
+        serializer = UserSerializer(request.user,
+                                    data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def retrieve(self, request, *args, **kwargs):
-        '''
-        Получение информации о пользователе GET запрос /api/v1/users/{
-        username}
-        '''
-        username = self.kwargs['pk']
-        if self.kwargs['pk'] == 'me':
-            user = self.request.user
-            serializer = UserSerializer(user)
-            return Response(serializer.data)
-        user = get_object_or_404(User, username=username)
-        serializer = UserSerializer(user)
-        return Response(serializer.data)
+    #
+    # def retrieve(self, request, *args, **kwargs):
+    #     '''
+    #     Получение информации о пользователе GET запрос /api/v1/users/{
+    #     username}
+    #     '''
+    #     username = self.kwargs['pk']
+    #     if self.kwargs['pk'] == 'me':
+    #         # user = self.request.user
+    #         serializer = UserSerializer(self.request.user)
+    #         return Response(serializer.data)
+    #     user = get_object_or_404(User, username=username)
+    #     serializer = UserSerializer(user)
+    #     return Response(serializer.data)
+    #
+    #
+    # def update(self, request, *args, **kwargs):
 
-    def retrieve(self, request, *args, **kwargs):
-        '''
-        Получение информации о пользователе GET запрос /api/v1/users/{
-        username}
-        '''
-        username = self.kwargs['pk']
-        if self.kwargs['pk'] == 'me':
-            user = self.request.user
-            serializer = UserSerializer(user)
-            return Response(serializer.data)
-        user = get_object_or_404(User, username=username)
-        serializer = UserSerializer(user)
-        return Response(serializer.data)
+    #     serializer = UserSerializer(request.user,data=request.data, partial=True)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #     return Response(serializer.data, status=status.HTTP_200_OK)
+    #
+    #
+    # def destroy(self, request, *args, **kwargs):
+    #     username = self.kwargs['pk']
+    #     if self.kwargs['pk'] == 'me':
+    #         user = get_object_or_404(User, username=self.request.user.username)
+    #         self.perform_destroy(user)
+    #     user = get_object_or_404(User, username=username)
+    #     self.perform_destroy(user)
+    #     return Response(status=status.HTTP_204_NO_CONTENT)
+
+    # @permission_classes([IsAdminOrSuperUser])
+    # class UserViewSet(viewsets.ModelViewSet):
+    #     """API для работы с пользователями."""
+    #     queryset = User.objects.all()
+    #     serializer_class = UserSerializer
+    #     lookup_field = "username"
