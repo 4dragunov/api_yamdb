@@ -25,8 +25,6 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
 
 
-
-
 class UserSerializer(serializers.ModelSerializer):
     # username = serializers.SlugRelatedField(
     #     read_only=True,
@@ -46,7 +44,6 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
 
-
 class UserEmailSerializer(serializers.Serializer):
     """Сериализатор email пользователя для выдачи секретного кода"""
     email = serializers.EmailField(required=True)
@@ -56,4 +53,16 @@ class UserLoginSerializer(serializers.Serializer):
     """Сериализатор email и секретного кода пользователя для JWT"""
     email = serializers.EmailField(required=True)
     secret = serializers.CharField(required=True)
+
+
+class CategorySerializer(serializers.Serializer):
+    pass
+
+
+class GenreSerializer(serializers.Serializer):
+    pass
+
+
+class TitleSerializer(serializers.Serializer):
+    pass
 

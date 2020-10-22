@@ -1,31 +1,35 @@
 import secrets
 import string
-
 from django.core.mail import send_mail
-from django.shortcuts import render
-# from .permissions import IsOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly
 from rest_framework.response import Response
-from rest_framework import permissions, status
+from rest_framework import status
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-
-
 from users.models import User
 from .models import Title
 from .serializers import ReviewSerializer, CommentSerializer, \
-    UserEmailSerializer, UserLoginSerializer, UserSerializer
+    UserEmailSerializer, UserLoginSerializer, UserSerializer, \
+    CategorySerializer, GenreSerializer, TitleSerializer
 
 
-# CategorySerializer, GenreSerializer, TitleSerializer
+class TitleViewSet(viewsets.ModelViewSet):
+    pass
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    pass
+    # serializer_class = CategorySerializer
+    # permission_classes = [IsOwnerOrReadOnly]
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    # permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [IsOwnerOrReadOnly]
 
     def get_queryset(self):
         title_id = self.kwargs['title_id']
@@ -33,16 +37,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-#
-class CategoryViewSet(viewsets.ModelViewSet):
-    pass
-#     # serializer_class = CategorySerializer
-#     # permission_classes = [IsOwnerOrReadOnly]
-#
+
+
 class CommentViewSet(viewsets.ModelViewSet):
     pass
-#     # serializer_class = CommentSerializer
-#     # permission_classes = [IsOwnerOrReadOnly]
+    serializer_class = CommentSerializer
+    permission_classes = [IsOwnerOrReadOnly]
 
     def get_queryset(self):
         title_id = self.kwargs['title_id']
@@ -55,11 +55,6 @@ class CommentViewSet(viewsets.ModelViewSet):
         author = self.request.user
         post = get_object_or_404(Title, pk=post_id)
         serializer.save(author=author, post=post)
-
-
-
-
-
 
 
 def id_generator(size=20, chars=string.ascii_uppercase + string.digits):
@@ -108,14 +103,12 @@ class UserLoginView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class UserViewSet(viewsets.ModelViewSet):
     '''Модель обработки запросов user'''
     serializer_class = UserSerializer
     queryset = User.objects.all()
     permission_classes = [IsAuthenticated]
     pagination_class = PageNumberPagination
-
 
     def retrieve(self, request, *args, **kwargs):
         '''
