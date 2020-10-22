@@ -1,7 +1,12 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from api.views import ReviewViewSet, CommentViewSet
-# from rest_framework.authtoken import views
+from api.views import (ReviewViewSet, CommentViewSet, UserViewSet,
+    ConfirmationCodeView, UserLoginView)
+
+v1_patterns = ([
+    path('auth/email', ConfirmationCodeView.as_view()),
+    path('auth/token', UserLoginView.as_view()),
+])
 
 
 v1_router = DefaultRouter()
@@ -15,9 +20,11 @@ v1_router.register(
     CommentViewSet,
     basename='CommentView'
 )
+v1_router.register(r'users', UserViewSet)
 
 
 urlpatterns = [
-    path('v1/',include(v1_router.urls)),
-    # здесь роут авторизации
+    path('v1/', include(v1_patterns)),
+    path('v1/', include(v1_router.urls)),
+
     ]
