@@ -1,6 +1,6 @@
 from django.db import models
-from users import User
-from titles import Title
+from users.models import User
+from titles.models   import Title
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 
