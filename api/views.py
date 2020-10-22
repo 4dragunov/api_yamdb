@@ -1,10 +1,9 @@
 from django.shortcuts import render
-
 from .permissions import IsOwnerOrReadOnly
 from rest_framework import permissions
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
-from titles import Title
+from .models import Title
 from .serializers import ReviewSerializer, CommentSerializer, CategorySerializer, GenreSerializer, TitleSerializer
 
 
