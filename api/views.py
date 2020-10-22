@@ -1,15 +1,16 @@
 from django.shortcuts import render
-from .permissions import IsOwnerOrReadOnly
+# from .permissions import IsOwnerOrReadOnly
 from rest_framework import permissions
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from .models import Title
-from .serializers import ReviewSerializer, CommentSerializer, CategorySerializer, GenreSerializer, TitleSerializer
+from .serializers import ReviewSerializer, CommentSerializer
+    # CategorySerializer, GenreSerializer, TitleSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = [IsOwnerOrReadOnly]
+    # permission_classes = [IsOwnerOrReadOnly]
 
     def get_queryset(self):
         title_id = self.kwargs['title_id']
@@ -17,14 +18,16 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-
+#
 class CategoryViewSet(viewsets.ModelViewSet):
-    serializer_class = CategorySerializer
-    permission_classes = [IsOwnerOrReadOnly]
-    
+    pass
+#     # serializer_class = CategorySerializer
+#     # permission_classes = [IsOwnerOrReadOnly]
+#
 class CommentViewSet(viewsets.ModelViewSet):
-    serializer_class = CommentSerializer
-    permission_classes = [IsOwnerOrReadOnly]
+    pass
+#     # serializer_class = CommentSerializer
+#     # permission_classes = [IsOwnerOrReadOnly]
 
     def get_queryset(self):
         title_id = self.kwargs['title_id']
