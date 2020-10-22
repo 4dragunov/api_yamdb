@@ -6,14 +6,14 @@ import datetime
 
 class Category(models.Model):
     name = models.CharField(max_length=100, verbose_name="Название категории")
-    slug = models.SlugField(max_length=40)
+    slug = models.SlugField(max_length=40, unique=True)
 
 
 
 
 class Genre(models.Model):
     name = models.CharField(max_length=100, verbose_name="Название жанра")
-    slug = models.SlugField(max_length=40)
+    slug = models.SlugField(max_length=40, unique=True)
 
 
 class Title(models.Model):

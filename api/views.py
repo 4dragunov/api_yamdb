@@ -1,33 +1,67 @@
 import secrets
 import string
-
 from django.core.mail import send_mail
-from django.shortcuts import render
-# from .permissions import IsOwnerOrReadOnly
 from rest_framework.decorators import action
+from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly
+
 from rest_framework.response import Response
-from rest_framework import permissions, status
+from rest_framework import status, filters
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-
-
 from users.models import User
-from .models import Title
+from .models import Title, Category, Genre
 from .permissions import IsAdmin
 from .serializers import ReviewSerializer, CommentSerializer, \
-    UserEmailSerializer, UserLoginSerializer, UserSerializer
+    UserEmailSerializer, UserLoginSerializer, UserSerializer, \
+    CategorySerializer, GenreSerializer, TitleSerializer
 
 
-# CategorySerializer, GenreSerializer, TitleSerializer
+class TitleViewSet(viewsets.ModelViewSet):
+    pass
 
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['=name']
+    lookup_field = "slug"
+
+    permission_classes_by_action = {'list': [AllowAny],
+                                    'create': [IsAuthenticated, IsAdmin]}
+
+    def retrieve(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def update(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+class GenreViewSet(viewsets.ModelViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['=name']
+    lookup_field = "slug"
+
+    permission_classes_by_action = {'list': [AllowAny],
+                                    'create': [IsAuthenticated, IsAdmin]}
+
+    def retrieve(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def update(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    # permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [IsOwnerOrReadOnly]
 
     def get_queryset(self):
         title_id = self.kwargs['title_id']
@@ -35,16 +69,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-#
-class CategoryViewSet(viewsets.ModelViewSet):
-    pass
-#     # serializer_class = CategorySerializer
-#     # permission_classes = [IsOwnerOrReadOnly]
-#
+
+
 class CommentViewSet(viewsets.ModelViewSet):
     pass
-#     # serializer_class = CommentSerializer
-#     # permission_classes = [IsOwnerOrReadOnly]
+    serializer_class = CommentSerializer
+    permission_classes = [IsOwnerOrReadOnly]
 
     def get_queryset(self):
         title_id = self.kwargs['title_id']
@@ -57,11 +87,6 @@ class CommentViewSet(viewsets.ModelViewSet):
         author = self.request.user
         post = get_object_or_404(Title, pk=post_id)
         serializer.save(author=author, post=post)
-
-
-
-
-
 
 
 def id_generator(size=20, chars=string.ascii_uppercase + string.digits):
@@ -110,7 +135,6 @@ class UserLoginView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class UserViewSet(viewsets.ModelViewSet):
     '''Модель обработки запросов user'''
     serializer_class = UserSerializer
@@ -128,42 +152,3 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    #
-    # def retrieve(self, request, *args, **kwargs):
-    #     '''
-    #     Получение информации о пользователе GET запрос /api/v1/users/{
-    #     username}
-    #     '''
-    #     username = self.kwargs['pk']
-    #     if self.kwargs['pk'] == 'me':
-    #         # user = self.request.user
-    #         serializer = UserSerializer(self.request.user)
-    #         return Response(serializer.data)
-    #     user = get_object_or_404(User, username=username)
-    #     serializer = UserSerializer(user)
-    #     return Response(serializer.data)
-    #
-    #
-    # def update(self, request, *args, **kwargs):
-
-    #     serializer = UserSerializer(request.user,data=request.data, partial=True)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #     return Response(serializer.data, status=status.HTTP_200_OK)
-    #
-    #
-    # def destroy(self, request, *args, **kwargs):
-    #     username = self.kwargs['pk']
-    #     if self.kwargs['pk'] == 'me':
-    #         user = get_object_or_404(User, username=self.request.user.username)
-    #         self.perform_destroy(user)
-    #     user = get_object_or_404(User, username=username)
-    #     self.perform_destroy(user)
-    #     return Response(status=status.HTTP_204_NO_CONTENT)
-
-    # @permission_classes([IsAdminOrSuperUser])
-    # class UserViewSet(viewsets.ModelViewSet):
-    #     """API для работы с пользователями."""
-    #     queryset = User.objects.all()
-    #     serializer_class = UserSerializer
-    #     lookup_field = "username"

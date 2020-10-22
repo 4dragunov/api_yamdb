@@ -1,7 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from api.views import (ReviewViewSet, CommentViewSet, UserViewSet,
-    ConfirmationCodeView, UserLoginView)
+                       ConfirmationCodeView, UserLoginView, CategoryViewSet,
+                       GenreViewSet)
 
 v1_patterns = ([
     path('auth/email', ConfirmationCodeView.as_view()),
@@ -21,6 +22,9 @@ v1_router.register(
     basename='CommentView'
 )
 v1_router.register(r'users', UserViewSet)
+v1_router.register(r'categories', CategoryViewSet)
+v1_router.register(r'genres', GenreViewSet)
+
 
 
 urlpatterns = [
