@@ -15,13 +15,39 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from users.models import User
 from .models import Title, Category, Genre
 from .permissions import IsAdmin
-from .serializers import ReviewSerializer, CommentSerializer, \
-    UserEmailSerializer, UserLoginSerializer, UserSerializer, \
+from .serializers import ReviewSerializer, CommentSerializer,\
+    UserEmailSerializer, UserLoginSerializer, UserSerializer,\
     CategorySerializer, GenreSerializer, TitleSerializer
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    pass
+    serializer_class = TitleSerializer
+    # permission_classes = [IsAdminOrReadOnly]
+    queryset = Title.objects.all()
+    lookup_field = "id"
+    pagination_class = PageNumberPagination
+
+    # def create(self, request, *args, **kwargs):
+    #     print(request.data)
+    #     data = request.data
+    #     category_slug = data.get('category')
+    #     category = get_object_or_404(Category, name=category_slug)
+    #     print(category)
+    #     genre_slugs = data.get('genre')
+    #     print(genre_slugs)
+    #     genres = []
+    #     for slug in genre_slugs:
+    #         genres += get_object_or_404(Genre, name=slug)
+    #     print(genres)
+    #     serializer = self.get_serializer(data=request.data)
+    #     serializer.is_valid(raise_exception=True)
+    #     self.perform_create(serializer)
+    #     print(serializer.data)
+    #     headers = self.get_success_headers(serializer.data)
+    #     return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    #
+    # def perform_create(self, serializer):
+    #     serializer.save()
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -32,8 +58,6 @@ class CategoryViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['=name']
     lookup_field = "slug"
-
-
 
     def retrieve(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -58,7 +82,6 @@ class GenreViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
-
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = [IsOwnerOrReadOnly]
@@ -72,7 +95,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    pass
     serializer_class = CommentSerializer
     permission_classes = [IsOwnerOrReadOnly]
 
@@ -151,4 +173,3 @@ class UserViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
-

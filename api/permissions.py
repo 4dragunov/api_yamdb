@@ -22,6 +22,7 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         # Instance must have an attribute named `owner`.
         return obj.author == request.user
 
+
 class IsAdmin(BasePermission):
     def has_permission(self, request, view):
         if not request.user.is_anonymous:
@@ -33,7 +34,7 @@ class IsAdminOrReadOnly(BasePermission):
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
             return True
-        if request.method in ['POST', 'DELETE']:
+        if request.method in ['POST', 'PATH', 'DELETE']:
             if request.user.is_anonymous:
                 return False
         return request.user.role == UserRole.ADMIN or request.user.is_superuser
