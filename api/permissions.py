@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 from rest_framework import permissions
 
+from users.models import UserRole
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
@@ -22,12 +23,17 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         return obj.author == request.user
 
 class IsAdmin(BasePermission):
-    def has_object_permission(self, request, view, obj):
-        return request.user.role == 'admin' or request.user.is_staff or \
-               request.user.is_superuser
+    def has_permission(self, request, view):
+        if not request.user.is_anonymous:
+            return request.user.role == UserRole.ADMIN or request.user.is_superuser
+        return False
 
 
 class IsAdminOrReadOnly(BasePermission):
-    '''Только автор может вносить изменения и удалять объект'''
-    def has_object_permission(self, request, view, obj):
-        return request.method in SAFE_METHODS or obj.role == 'ADMIN'
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+        if request.method in ['POST', 'DELETE']:
+            if request.user.is_anonymous:
+                return False
+        return request.user.role == UserRole.ADMIN or request.user.is_superuser

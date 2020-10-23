@@ -25,6 +25,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAdminOrReadOnly]
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     pagination_class = PageNumberPagination
@@ -32,8 +33,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     search_fields = ['=name']
     lookup_field = "slug"
 
-    permission_classes_by_action = {'list': [AllowAny],
-                                    'create': [IsAuthenticated, IsAdmin]}
+
 
     def retrieve(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -49,15 +49,15 @@ class GenreViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['=name']
     lookup_field = "slug"
-
-    permission_classes_by_action = {'list': [AllowAny],
-                                    'create': [IsAuthenticated, IsAdmin]}
+    permission_classes = [IsAdminOrReadOnly]
 
     def retrieve(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def update(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
@@ -139,7 +139,7 @@ class UserViewSet(viewsets.ModelViewSet):
     '''Модель обработки запросов user'''
     serializer_class = UserSerializer
     queryset = User.objects.all()
-    permission_classes = [IsAdmin, IsAuthenticated]
+    permission_classes = (IsAdmin, IsAuthenticated,)
     pagination_class = PageNumberPagination
     lookup_field = "username"
 
