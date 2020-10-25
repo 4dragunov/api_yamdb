@@ -58,6 +58,8 @@ class UserLoginSerializer(serializers.Serializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
+
+    # slug = SlugRelatedField(slug_field='slug', read_only=True)
     class Meta:
         fields = ('name', 'slug')
         model = Category
@@ -70,7 +72,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    category = GenreSerializer(read_only=True)
+    category = CategorySerializer(read_only=True)
     genre = GenreSerializer(read_only=True, many=True)
 
     class Meta:

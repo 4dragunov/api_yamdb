@@ -9,15 +9,16 @@ class Category(models.Model):
     slug = models.SlugField(max_length=40, unique=True)
 
     def __str__(self):
-        return self.name
+        return self.slug
 
 
 class Genre(models.Model):
-    name = models.CharField(max_length=100, verbose_name="Название жанра")
+    name = models.CharField(max_length=100, verbose_name="Название жанра",
+                            blank=False)
     slug = models.SlugField(max_length=40, unique=True)
 
     def __str__(self):
-        return self.name
+        return self.slug
 
 
 class Title(models.Model):

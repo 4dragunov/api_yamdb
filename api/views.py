@@ -1,5 +1,7 @@
 import secrets
 import string
+
+import django_filters
 from django.core.mail import send_mail
 from rest_framework.decorators import action
 from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly
@@ -19,15 +21,49 @@ from .serializers import ReviewSerializer, CommentSerializer,\
     UserEmailSerializer, UserLoginSerializer, UserSerializer,\
     CategorySerializer, GenreSerializer, TitleSerializer
 
+#
+# class testfilter(django_filters.rest_framework.FilterSet):
+#     class Meta:
+#         model = Genre
+#         fields = ['slug']
 
 class TitleViewSet(viewsets.ModelViewSet):
     serializer_class = TitleSerializer
     # permission_classes = [IsAdminOrReadOnly]
     queryset = Title.objects.all()
-    lookup_field = "id"
+    # lookup_field = "id"
     pagination_class = PageNumberPagination
+    # filter_backends = [filters.SearchFilter]
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    # filterset_class = [testfilter]
+    # filterset_fields = ['genre']
+    # search_fields = ['=name']
 
-    # def create(self, request, *args, **kwargs):
+    # def get_filterset_kwargs(self):
+    #     return {
+    #         'slug': Category.objects.all(),
+    #     }
+
+    # def get_filterset_kwargs(self):
+    #     return {
+    #         'genre': self.slug(),
+    #     }
+
+    def perform_create(self, serializer):
+        category_slug = self.request.data['category']
+        category = get_object_or_404(Category, slug=category_slug)
+
+        # genre_slug = self.request.data['genre']
+        genre_slug = self.request.POST.getlist("genre")
+        # print(genre_slug)
+        # genre = get_object_or_404(Genre, slug=genre_slug)
+        genres = Genre.objects.filter(slug__in=genre_slug)
+        print(genres)
+        # print(self.request.data)
+        serializer.save(category=category,
+                        genre=genres
+                        )
+
     #     print(request.data)
     #     data = request.data
     #     category_slug = data.get('category')
