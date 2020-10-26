@@ -89,7 +89,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         title_id = self.kwargs['title_id']
-        return get_object_or_404(Title, pk=title_id).reviews
+        title = get_object_or_404(Title, pk=title_id)
+        print(title)
+        print(title.reviews)
+        return title.reviews
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
