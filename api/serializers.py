@@ -56,19 +56,20 @@ class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
     secret = serializers.CharField(required=True)
 
+class GenreSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ('name', 'slug')
+        model = Genre
+
 
 class CategorySerializer(serializers.ModelSerializer):
-
     # slug = SlugRelatedField(slug_field='slug', read_only=True)
     class Meta:
         fields = ('name', 'slug')
         model = Category
 
 
-class GenreSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = ('name', 'slug')
-        model = Genre
+
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -78,5 +79,8 @@ class TitleSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'name', 'category', 'genre', 'year', 'description', 'rating')
         model = Title
+
+
+
 
 
