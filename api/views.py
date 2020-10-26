@@ -1,38 +1,36 @@
+import django_filters
 import secrets
 import string
 
-import django_filters
 from django.core.mail import send_mail
-from rest_framework.decorators import action
-
-from .filters import TitleFilter
-from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly
-
-from rest_framework.response import Response
-from rest_framework import status, filters
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
+
+from rest_framework import status, filters, viewsets
+from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from titles.models import Title, Category, Genre
 from users.models import User
-from .models import Title, Category, Genre
-from .permissions import IsAdmin
-from .serializers import ReviewSerializer, CommentSerializer,\
-    UserEmailSerializer, UserLoginSerializer, UserSerializer,\
+from reviews.models import Review
+from .filters import TitleFilter
+
+from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly, IsAdmin
+from .serializers import ReviewSerializer, CommentSerializer, \
+    UserEmailSerializer, UserLoginSerializer, UserSerializer, \
     CategorySerializer, GenreSerializer, TitleSerializer
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     serializer_class = TitleSerializer
-    # permission_classes = [IsAdminOrReadOnly]
     queryset = Title.objects.all()
-    # lookup_field = "id"
     pagination_class = PageNumberPagination
     filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
     filterset_class = TitleFilter
-
+    permission_classes = [IsAdminOrReadOnly]
 
     def perform_create(self, serializer):
         category_slug = self.request.data['category']
@@ -42,27 +40,6 @@ class TitleViewSet(viewsets.ModelViewSet):
         serializer.save(category=category,
                         genre=genres
                         )
-
-    #     print(request.data)
-    #     data = request.data
-    #     category_slug = data.get('category')
-    #     category = get_object_or_404(Category, name=category_slug)
-    #     print(category)
-    #     genre_slugs = data.get('genre')
-    #     print(genre_slugs)
-    #     genres = []
-    #     for slug in genre_slugs:
-    #         genres += get_object_or_404(Genre, name=slug)
-    #     print(genres)
-    #     serializer = self.get_serializer(data=request.data)
-    #     serializer.is_valid(raise_exception=True)
-    #     self.perform_create(serializer)
-    #     print(serializer.data)
-    #     headers = self.get_success_headers(serializer.data)
-    #     return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-    #
-    # def perform_create(self, serializer):
-    #     serializer.save()
 
 
 class CategoryViewSet(viewsets.ModelViewSet):

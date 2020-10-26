@@ -1,15 +1,13 @@
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
-from api.models import Category, Genre, Title
+from titles.models import Category, Genre, Title
 from reviews.models import Review, Comment
 from users.models import User
 
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(slug_field='username', read_only=True)
-    # TODO AS:
-    # title = SlugRelatedField(slug_field='pass', read_only=True)
 
     class Meta:
         fields = ('id', 'text', 'author', 'score', 'pub_date')
@@ -18,9 +16,6 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(slug_field='username', read_only=True)
-    # TODO AS:
-    # title = SlugRelatedField(slug_field='pass', read_only=True)
-    # review = SlugRelatedField(slug_field='pass', read_only=True)
 
     class Meta:
         fields = ('id', 'text', 'author', 'pub_date')
@@ -28,10 +23,6 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    # username = serializers.SlugRelatedField(
-    #     read_only=True,
-    #     slug_field='username'
-    # )
 
     class Meta:
         model = User
@@ -56,6 +47,7 @@ class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
     secret = serializers.CharField(required=True)
 
+
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('name', 'slug')
@@ -69,9 +61,6 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
 
 
-
-
-
 class TitleSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(read_only=True, many=True)
@@ -79,8 +68,3 @@ class TitleSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'name', 'category', 'genre', 'year', 'description', 'rating')
         model = Title
-
-
-
-
-

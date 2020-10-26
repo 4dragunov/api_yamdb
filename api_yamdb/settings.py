@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'api',
     'users',
     'reviews',
+    'titles',
     'django_filters',
 
 ]
