@@ -1,53 +1,54 @@
 import secrets
 import string
-from django.core.mail import send_mail
-from rest_framework.decorators import action
-from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly
 
-from rest_framework.response import Response
-from rest_framework import status, filters
+import django_filters
+from django.core import exceptions
+from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
+from rest_framework import status, filters, viewsets
+from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from reviews.models import Review
+from titles.models import Title, Category, Genre
 from users.models import User
-from .models import Title, Category, Genre
-from .permissions import IsAdmin
-from .serializers import ReviewSerializer, CommentSerializer,\
-    UserEmailSerializer, UserLoginSerializer, UserSerializer,\
+from .filters import TitleFilter
+from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly, IsAdmin
+from .serializers import ReviewSerializer, CommentSerializer, \
+    UserEmailSerializer, UserLoginSerializer, UserSerializer, \
     CategorySerializer, GenreSerializer, TitleSerializer
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     serializer_class = TitleSerializer
-    # permission_classes = [IsAdminOrReadOnly]
     queryset = Title.objects.all()
-    lookup_field = "id"
     pagination_class = PageNumberPagination
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    filterset_class = TitleFilter
+    permission_classes = [IsAdminOrReadOnly]
 
-    # def create(self, request, *args, **kwargs):
-    #     print(request.data)
-    #     data = request.data
-    #     category_slug = data.get('category')
-    #     category = get_object_or_404(Category, name=category_slug)
-    #     print(category)
-    #     genre_slugs = data.get('genre')
-    #     print(genre_slugs)
-    #     genres = []
-    #     for slug in genre_slugs:
-    #         genres += get_object_or_404(Genre, name=slug)
-    #     print(genres)
-    #     serializer = self.get_serializer(data=request.data)
-    #     serializer.is_valid(raise_exception=True)
-    #     self.perform_create(serializer)
-    #     print(serializer.data)
-    #     headers = self.get_success_headers(serializer.data)
-    #     return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-    #
-    # def perform_create(self, serializer):
-    #     serializer.save()
+    def perform_create(self, serializer):
+        category_slug = self.request.data['category']
+        category = get_object_or_404(Category, slug=category_slug)
+        genre_slug = self.request.POST.getlist("genre")
+        genres = Genre.objects.filter(slug__in=genre_slug)
+        serializer.save(category=category,
+                        genre=genres
+                        )
+
+    def perform_update(self, serializer):
+        category_slug = self.request.data['category']
+        category = get_object_or_404(Category, slug=category_slug)
+        genre_slug = self.request.POST.getlist("genre")
+        genres = Genre.objects.filter(slug__in=genre_slug)
+        serializer.save(category=category,
+                        genre=genres
+                        )
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -87,11 +88,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = [IsOwnerOrReadOnly]
 
     def get_queryset(self):
-        title_id = self.kwargs['title_id']
-        return get_object_or_404(Title, pk=title_id).reviews
+        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
+        return title.reviews.all()
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        title_id = self.kwargs.get("title_id")
+        title = get_object_or_404(Title, pk=title_id)
+        if Review.objects.filter( author=self.request.user,title=title).exists():
+            raise ValidationError("Вы уже оставили отзыв")
+        serializer.save(author=self.request.user, title=title)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
