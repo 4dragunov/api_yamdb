@@ -18,7 +18,8 @@ from users.models import User
 from reviews.models import Review
 from .filters import TitleFilter
 
-from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly, IsAdmin
+from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly, IsAdmin, \
+    ReviewPermissions
 from .serializers import ReviewSerializer, CommentSerializer, \
     UserEmailSerializer, UserLoginSerializer, UserSerializer, \
     CategorySerializer, GenreSerializer, TitleSerializer
@@ -86,17 +87,18 @@ class GenreViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = [IsOwnerOrReadOnly]
+    queryset = Review.objects.all()
 
-    def get_queryset(self):
-        title_id = self.kwargs['title_id']
-        title = get_object_or_404(Title, pk=title_id)
-        print(title)
-        print(title.reviews)
-        return title.reviews
+    # def get_queryset(self):
+    #     # title_id = self.kwargs['title_id']
+    #     title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
+    #     print(title)
+    #     print(title.reviews)
+    #     return title.reviews
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
-
+        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
+        serializer.save(author=self.request.user, title=title)
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
