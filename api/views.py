@@ -41,6 +41,15 @@ class TitleViewSet(viewsets.ModelViewSet):
                         genre=genres
                         )
 
+    def perform_update(self, serializer):
+        category_slug = self.request.data['category']
+        category = get_object_or_404(Category, slug=category_slug)
+        genre_slug = self.request.POST.getlist("genre")
+        genres = Genre.objects.filter(slug__in=genre_slug)
+        serializer.save(category=category,
+                        genre=genres
+                        )
+
 
 class CategoryViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
