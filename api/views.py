@@ -2,17 +2,15 @@ import secrets
 import string
 
 import django_filters
-from django.core import exceptions
 from django.core.mail import send_mail
 from django.db.models import Avg
-from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import status, filters, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated, \
-    IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (IsAuthenticated,
+    IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -21,10 +19,10 @@ from reviews.models import Review
 from titles.models import Title, Category, Genre
 from users.models import User
 from .filters import TitleFilter
-from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly, IsAdmin, IsAdminOrStaff
-from .serializers import ReviewSerializer, CommentSerializer, \
-    UserEmailSerializer, UserLoginSerializer, UserSerializer, \
-    CategorySerializer, GenreSerializer, TitleSerializer
+from .permissions import IsAdminOrReadOnly, IsAdminOrStaff, IsAdmin
+from .serializers import (ReviewSerializer, CommentSerializer,
+    UserEmailSerializer, UserLoginSerializer, UserSerializer,
+    CategorySerializer, GenreSerializer, TitleSerializer)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -107,7 +105,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         title_id = self.kwargs.get("title_id")
-        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
+        title = get_object_or_404(Title, pk=title_id)
         serializer.save(author=self.request.user, title=title)
         title.rating = Review.objects.filter(title=title).aggregate(Avg(
             "score"))["score__avg"]
