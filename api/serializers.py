@@ -69,8 +69,5 @@ class TitleSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = ('id', 'name', 'category', 'genre', 'year', 'description', 'rating')
-<<<<<<< HEAD
         model = Title
-=======
-        model = Title
->>>>>>> 4e12483eee56526f9ff81770161b66b8edc7fff2
+
