@@ -2,14 +2,15 @@ import secrets
 import string
 
 import django_filters
-from django.core import exceptions
 from django.core.mail import send_mail
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import status, filters, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import (IsAuthenticated,
+    IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -18,10 +19,10 @@ from reviews.models import Review
 from titles.models import Title, Category, Genre
 from users.models import User
 from .filters import TitleFilter
-from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly, IsAdmin
-from .serializers import ReviewSerializer, CommentSerializer, \
-    UserEmailSerializer, UserLoginSerializer, UserSerializer, \
-    CategorySerializer, GenreSerializer, TitleSerializer
+from .permissions import IsAdminOrReadOnly, IsAdminOrStaff, IsAdmin
+from .serializers import (ReviewSerializer, CommentSerializer,
+    UserEmailSerializer, UserLoginSerializer, UserSerializer,
+    CategorySerializer, GenreSerializer, TitleSerializer)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -85,7 +86,7 @@ class GenreViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [IsAdminOrStaff, IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
         title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
@@ -94,27 +95,39 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         title_id = self.kwargs.get("title_id")
         title = get_object_or_404(Title, pk=title_id)
-        if Review.objects.filter( author=self.request.user,title=title).exists():
+        if Review.objects.filter(author=self.request.user,
+                                  title=title).exists():
             raise ValidationError("Вы уже оставили отзыв")
         serializer.save(author=self.request.user, title=title)
+        title.rating = Review.objects.filter(title=title).aggregate(Avg(
+            "score"))["score__avg"]
+        title.save(update_fields=["rating"])
+
+    def perform_update(self, serializer):
+        title_id = self.kwargs.get("title_id")
+        title = get_object_or_404(Title, pk=title_id)
+        serializer.save(author=self.request.user, title=title)
+        title.rating = Review.objects.filter(title=title).aggregate(Avg(
+            "score"))["score__avg"]
+        title.save(update_fields=["rating"])
+
 
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [IsAdminOrStaff, IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        title_id = self.kwargs['title_id']
-        reviews_set = get_object_or_404(Title, pk=title_id).reviews
-        review_id = self.kwargs['review_id']
-        return get_object_or_404(reviews_set, pk=review_id).comments
+        title_id = self.kwargs.get("title_id")
+        review_id = self.kwargs.get("review_id")
+        review = get_object_or_404(Review, pk=review_id, title__id=title_id)
+        return review.comments.all()
 
     def perform_create(self, serializer):
-        post_id = self.kwargs['review_id']
-        author = self.request.user
-        post = get_object_or_404(Title, pk=post_id)
-        serializer.save(author=author, post=post)
-
+        title_id = self.kwargs.get("title_id")
+        review_id = self.kwargs.get("review_id")
+        review = get_object_or_404(Review, pk=review_id, title__id=title_id)
+        serializer.save(author=self.request.user, review=review)
 
 def id_generator(size=20, chars=string.ascii_uppercase + string.digits):
     return ''.join(secrets.choice(chars) for _ in range(size))

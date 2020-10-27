@@ -42,7 +42,7 @@ class Comment(models.Model):
         verbose_name="Пользователь",
     )
     text = models.TextField(verbose_name="Текст комментария")
-    created = models.DateTimeField(
+    pub_date = models.DateTimeField(
         auto_now_add=True,
         verbose_name="Дата комментария",
     )

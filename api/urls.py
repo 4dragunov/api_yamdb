@@ -12,8 +12,11 @@ v1_patterns = ([
 
 v1_router = DefaultRouter()
 v1_router.register(r'titles', TitleViewSet, basename='TitlesView')
-# v1_router.register(r'titles/(P<title_id>\.+)', TitleViewSet, basename='TitleView')
 v1_router.register(r'titles/(?P<title_id>\d+)/reviews', ReviewViewSet, basename='ReviewsView')
+v1_router.register(r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
+                   CommentViewSet,
+                   basename='ReviewsView')
+
 # v1_router.register(r'titles/(P<title_id>\.+)/(P<review_id>\.+)', ReviewViewSet, basename='ReviewView')
 v1_router.register(r'titles/(P<titles_id>\.+)/(?P<review_id>.+)/comments', CommentViewSet, basename='CommentsView')
 # v1_router.register(
