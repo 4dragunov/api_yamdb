@@ -114,42 +114,22 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title.save(update_fields=["rating"])
 
 
-    # def perform_destroy(self, instance):
-    #     title_id = self.kwargs.get("title_id")
-    #     title = get_object_or_404(Title, pk=title_id)
-    #     review_id = self.kwargs.get("review_id")
-    #     review = get_object_or_404(Review, pk=review_id)
-    #
-    #     instance = Review.objects.get(title=title, review=review_id)
-    #     instance.delete()
-
-    # def destroy(self, request, *args, **kwargs):
-    #     try:
-    #         instance = self.get_object()
-    #         self.perform_destroy(instance)
-    #     except Http404:
-    #         pass
-    #     return Response(status=status.HTTP_204_NO_CONTENT)
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdminOrStaff, IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        title_id = self.kwargs['title_id']
-        reviews_set = get_object_or_404(Title, pk=title_id).reviews
-        review_id = self.kwargs['review_id']
-        return get_object_or_404(reviews_set, pk=review_id).comments
+        title_id = self.kwargs.get("title_id")
+        review_id = self.kwargs.get("review_id")
+        review = get_object_or_404(Review, pk=review_id, title__id=title_id)
+        return review.comments.all()
 
     def perform_create(self, serializer):
-        post_id = self.kwargs['review_id']
-        author = self.request.user
-        post = get_object_or_404(Title, pk=post_id)
-        serializer.save(author=author, post=post)
-
-
-
-
+        title_id = self.kwargs.get("title_id")
+        review_id = self.kwargs.get("review_id")
+        review = get_object_or_404(Review, pk=review_id, title__id=title_id)
+        serializer.save(author=self.request.user, review=review)
 
 def id_generator(size=20, chars=string.ascii_uppercase + string.digits):
     return ''.join(secrets.choice(chars) for _ in range(size))
