@@ -1,6 +1,7 @@
-from django.db import models
-from django.core.validators import MaxValueValidator, MinValueValidator
 import datetime
+
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
 
 
 class Category(models.Model):
@@ -27,7 +28,7 @@ class Title(models.Model):
     rating = models.IntegerField(
         validators=[MaxValueValidator(10), MinValueValidator(1)], null=True, )
     description = models.TextField(max_length=1000,
-                                   verbose_name="Краткое описание произведения")
+                                   verbose_name="Краткое описание")
     genre = models.ManyToManyField(Genre)
     category = models.ForeignKey(
         Category,

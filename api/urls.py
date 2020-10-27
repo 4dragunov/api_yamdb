@@ -1,8 +1,11 @@
-from django.urls import path, include
+from api.views import (CategoryViewSet, CommentViewSet,
+                       ConfirmationCodeView, GenreViewSet,
+                       ReviewViewSet, TitleViewSet, UserLoginView, UserViewSet)
+
+from django.urls import include, path
+
 from rest_framework.routers import DefaultRouter
-from api.views import (ReviewViewSet, CommentViewSet, UserViewSet,
-                       ConfirmationCodeView, UserLoginView, CategoryViewSet,
-                       GenreViewSet, TitleViewSet)
+
 
 v1_patterns = ([
     path('auth/email', ConfirmationCodeView.as_view()),

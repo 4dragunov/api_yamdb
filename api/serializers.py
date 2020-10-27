@@ -1,8 +1,9 @@
 from rest_framework import serializers
-from rest_framework.relations import SlugRelatedField
+
+from reviews.models import Comment, Review
 
 from titles.models import Category, Genre, Title
-from reviews.models import Review, Comment
+
 from users.models import User
 
 

@@ -1,11 +1,13 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
+
 from users.models import UserRole
 
 
 class IsAdmin(BasePermission):
     def has_permission(self, request, view):
         if not request.user.is_anonymous:
-            return request.user.role == UserRole.ADMIN or request.user.is_superuser
+            return (request.user.role == UserRole.ADMIN or
+                    request.user.is_superuser)
         return False
 
 

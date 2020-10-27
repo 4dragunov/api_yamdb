@@ -1,6 +1,6 @@
+from django.contrib.auth.models import AbstractUser
 from django.core.validators import validate_email
 from django.db import models
-from django.contrib.auth.models import AbstractUser
 
 
 class UserRole(models.TextChoices):

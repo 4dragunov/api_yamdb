@@ -1,11 +1,13 @@
 import secrets
 import string
 
-import django_filters
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-from rest_framework import status, filters, viewsets
+
+import django_filters
+
+from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
@@ -13,17 +15,21 @@ from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Review
-from titles.models import Title, Category, Genre
+
+from titles.models import Category, Genre, Title
+
 from users.models import User
+
 from .filters import TitleFilter
-from .permissions import IsAdminOrReadOnly, IsAdminOrStaff, IsAdmin
-from .serializers import (ReviewSerializer, CommentSerializer,
-                          UserEmailSerializer, UserLoginSerializer,
-                          UserSerializer,
-                          CategorySerializer, GenreSerializer, TitleSerializer)
+from .permissions import IsAdmin, IsAdminOrReadOnly, IsAdminOrStaff
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, ReviewSerializer,
+                          TitleSerializer, UserEmailSerializer,
+                          UserLoginSerializer, UserSerializer)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -165,7 +171,9 @@ class UserLoginView(APIView):
     """ Модель авторизации пользователя """
 
     def post(self, request):
-        """Обработка POST запроса на получение JWT по email и секретному коду"""
+        """
+        Обработка POST запроса на получение JWT по email и секретному коду
+        """
         serializer = UserLoginSerializer(data=request.data)
         if serializer.is_valid():
             email = serializer.data['email']
