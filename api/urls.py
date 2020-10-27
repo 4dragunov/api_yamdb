@@ -9,21 +9,16 @@ v1_patterns = ([
     path('auth/token', UserLoginView.as_view()),
 ])
 
-
 v1_router = DefaultRouter()
 v1_router.register(r'titles', TitleViewSet, basename='TitlesView')
-v1_router.register(r'titles/(?P<title_id>\d+)/reviews', ReviewViewSet, basename='ReviewsView')
-v1_router.register(r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
-                   CommentViewSet,
+v1_router.register(r'titles/(?P<title_id>\d+)/reviews', ReviewViewSet,
                    basename='ReviewsView')
-
-# v1_router.register(r'titles/(P<title_id>\.+)/(P<review_id>\.+)', ReviewViewSet, basename='ReviewView')
-# v1_router.register(r'titles/(P<titles_id>\.+)/(?P<review_id>.+)/comments', CommentViewSet, basename='CommentsView')
-# v1_router.register(
-#     r'titles/(P<title_id>\.+)/(?P<review_id>.+)/comments/(?P<comment_id>.+)',
-#     CommentViewSet,
-#     basename='CommentView'
-# )
+v1_router.register(
+    r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
+    CommentViewSet,
+    basename='ReviewsView')
+v1_router.register(r'titles/(P<titles_id>\.+)/(?P<review_id>.+)/comments',
+                   CommentViewSet, basename='CommentsView')
 v1_router.register(r'users', UserViewSet)
 v1_router.register(r'categories', CategoryViewSet)
 v1_router.register(r'genres', GenreViewSet)
@@ -31,4 +26,4 @@ v1_router.register(r'genres', GenreViewSet)
 urlpatterns = [
     path('v1/', include(v1_patterns)),
     path('v1/', include(v1_router.urls)),
-    ]
+]

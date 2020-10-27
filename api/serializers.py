@@ -7,7 +7,6 @@ from users.models import User
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-
     author = serializers.SlugRelatedField(slug_field='username',
                                           read_only=True)
 
@@ -17,16 +16,15 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-
     author = serializers.SlugRelatedField(slug_field='username',
                                           read_only=True)
+
     class Meta:
         fields = ('id', 'text', 'author', 'pub_date')
         model = Comment
 
 
 class UserSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = User
         fields = (
@@ -41,12 +39,10 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserEmailSerializer(serializers.Serializer):
-    """Сериализатор email пользователя для выдачи секретного кода"""
     email = serializers.EmailField(required=True)
 
 
 class UserLoginSerializer(serializers.Serializer):
-    """Сериализатор email и секретного кода пользователя для JWT"""
     email = serializers.EmailField(required=True)
     secret = serializers.CharField(required=True)
 
@@ -58,7 +54,6 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    # slug = SlugRelatedField(slug_field='slug', read_only=True)
     class Meta:
         fields = ('name', 'slug')
         model = Category
@@ -69,5 +64,6 @@ class TitleSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(read_only=True, many=True)
 
     class Meta:
-        fields = ('id', 'name', 'category', 'genre', 'year', 'description', 'rating')
+        fields = (
+            'id', 'name', 'category', 'genre', 'year', 'description', 'rating')
         model = Title

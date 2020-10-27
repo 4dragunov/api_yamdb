@@ -12,9 +12,11 @@ class UserRole(models.TextChoices):
 class User(AbstractUser):
     """Расширение стандартной модели пользователя Django"""
     bio = models.TextField(blank=True)
-    email = models.EmailField(blank=False, unique=True, validators=[validate_email,])
+    email = models.EmailField(blank=False, unique=True,
+                              validators=[validate_email, ])
     role = models.CharField(
-        max_length=9, blank=False, choices=UserRole.choices, default=UserRole.USER
+        max_length=9, blank=False, choices=UserRole.choices,
+        default=UserRole.USER
     )
     secret = models.CharField(max_length=20)
     username = models.CharField(max_length=20,
@@ -22,6 +24,3 @@ class User(AbstractUser):
                                 null=True,
                                 unique=True,
                                 db_index=True)
-
-    # USERNAME_FIELD = 'email'
-    # REQUIRED_FIELDS = []

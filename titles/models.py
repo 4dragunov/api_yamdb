@@ -21,12 +21,13 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
-    name = models.CharField(max_length=100, verbose_name="Название произведения")
-    # YEAR_CHOICES = [(r, r) for r in range(1984, datetime.date.today().year + 1)]
-    # year = models.IntegerField('year', choices=YEAR_CHOICES, default=datetime.datetime.now().year)
+    name = models.CharField(max_length=100,
+                            verbose_name="Название произведения")
     year = models.PositiveIntegerField(default=datetime.datetime.now().year)
-    rating = models.IntegerField(validators=[MaxValueValidator(10), MinValueValidator(1)], null=True, )
-    description = models.TextField(max_length=1000, verbose_name="Краткое описание произведения")
+    rating = models.IntegerField(
+        validators=[MaxValueValidator(10), MinValueValidator(1)], null=True, )
+    description = models.TextField(max_length=1000,
+                                   verbose_name="Краткое описание произведения")
     genre = models.ManyToManyField(Genre)
     category = models.ForeignKey(
         Category,
