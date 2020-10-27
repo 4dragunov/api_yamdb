@@ -10,7 +10,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import (IsAuthenticated,
-    IsAuthenticatedOrReadOnly)
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -21,11 +21,13 @@ from users.models import User
 from .filters import TitleFilter
 from .permissions import IsAdminOrReadOnly, IsAdminOrStaff, IsAdmin
 from .serializers import (ReviewSerializer, CommentSerializer,
-    UserEmailSerializer, UserLoginSerializer, UserSerializer,
-    CategorySerializer, GenreSerializer, TitleSerializer)
+                          UserEmailSerializer, UserLoginSerializer,
+                          UserSerializer,
+                          CategorySerializer, GenreSerializer, TitleSerializer)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    """"Модель обработки запросов к произведениям"""
     serializer_class = TitleSerializer
     queryset = Title.objects.all()
     pagination_class = PageNumberPagination
@@ -34,6 +36,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
 
     def perform_create(self, serializer):
+        """"Создание нового произведения, возможно только администротором"""
         category_slug = self.request.data['category']
         category = get_object_or_404(Category, slug=category_slug)
         genre_slug = self.request.POST.getlist("genre")
@@ -43,6 +46,8 @@ class TitleViewSet(viewsets.ModelViewSet):
                         )
 
     def perform_update(self, serializer):
+        """"Изменение характеристик существующего произведения,
+        возможно только администротором"""
         category_slug = self.request.data['category']
         category = get_object_or_404(Category, slug=category_slug)
         genre_slug = self.request.POST.getlist("genre")
@@ -53,6 +58,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
+    """Модель обработки категорий"""
     permission_classes = [IsAdminOrReadOnly]
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -69,6 +75,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 
 class GenreViewSet(viewsets.ModelViewSet):
+    """Модель обработки жанров"""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     pagination_class = PageNumberPagination
@@ -85,6 +92,7 @@ class GenreViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    """Модель обработки отзывов"""
     serializer_class = ReviewSerializer
     permission_classes = [IsAdminOrStaff, IsAuthenticatedOrReadOnly]
 
@@ -96,7 +104,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title_id = self.kwargs.get("title_id")
         title = get_object_or_404(Title, pk=title_id)
         if Review.objects.filter(author=self.request.user,
-                                  title=title).exists():
+                                 title=title).exists():
             raise ValidationError("Вы уже оставили отзыв")
         serializer.save(author=self.request.user, title=title)
         title.rating = Review.objects.filter(title=title).aggregate(Avg(
@@ -112,8 +120,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title.save(update_fields=["rating"])
 
 
-
 class CommentViewSet(viewsets.ModelViewSet):
+    """Модель обработки комментариев"""
     serializer_class = CommentSerializer
     permission_classes = [IsAdminOrStaff, IsAuthenticatedOrReadOnly]
 
@@ -129,14 +137,15 @@ class CommentViewSet(viewsets.ModelViewSet):
         review = get_object_or_404(Review, pk=review_id, title__id=title_id)
         serializer.save(author=self.request.user, review=review)
 
+
 def id_generator(size=20, chars=string.ascii_uppercase + string.digits):
     return ''.join(secrets.choice(chars) for _ in range(size))
 
 
 class ConfirmationCodeView(APIView):
-    '''Обработка POST запроса на получение Confirmation code'''
 
     def post(self, request):
+        """Обработка POST запроса на получение Confirmation code"""
         serializer = UserEmailSerializer(data=request.data)
         if serializer.is_valid():
             email = serializer.data['email']
@@ -153,9 +162,10 @@ class ConfirmationCodeView(APIView):
 
 
 class UserLoginView(APIView):
-    '''Обработка POST запроса на получение JWT по email и секретному коду'''
+    """ Модель авторизации пользователя """
 
     def post(self, request):
+        """Обработка POST запроса на получение JWT по email и секретному коду"""
         serializer = UserLoginSerializer(data=request.data)
         if serializer.is_valid():
             email = serializer.data['email']
@@ -176,7 +186,7 @@ class UserLoginView(APIView):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    '''Модель обработки запросов user'''
+    """Модель обработки запросов пользователя"""
     serializer_class = UserSerializer
     queryset = User.objects.all()
     permission_classes = (IsAdmin, IsAuthenticated,)
