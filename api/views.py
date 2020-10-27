@@ -4,12 +4,14 @@ import string
 import django_filters
 from django.core import exceptions
 from django.core.mail import send_mail
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import status, filters, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, \
+    IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -18,7 +20,8 @@ from reviews.models import Review
 from titles.models import Title, Category, Genre
 from users.models import User
 from .filters import TitleFilter
-from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly, IsAdmin
+from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly, IsAdmin, \
+    ReviewPermissions
 from .serializers import ReviewSerializer, CommentSerializer, \
     UserEmailSerializer, UserLoginSerializer, UserSerializer, \
     CategorySerializer, GenreSerializer, TitleSerializer
@@ -85,7 +88,7 @@ class GenreViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [ReviewPermissions, IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
         title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
@@ -94,14 +97,35 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         title_id = self.kwargs.get("title_id")
         title = get_object_or_404(Title, pk=title_id)
-        if Review.objects.filter( author=self.request.user,title=title).exists():
+        if Review.objects.filter(author=self.request.user,
+                                  title=title).exists():
             raise ValidationError("Вы уже оставили отзыв")
         serializer.save(author=self.request.user, title=title)
+        title.rating = Review.objects.filter(title=title).aggregate(Avg(
+            "score"))["score__avg"]
+        title.save(update_fields=["rating"])
 
+    def perform_update(self, serializer):
+        title_id = self.kwargs.get("title_id")
+        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
+        serializer.save(author=self.request.user, title=title)
+        title.rating = Review.objects.filter(title=title).aggregate(Avg(
+            "score"))["score__avg"]
+        title.save(update_fields=["rating"])
+
+
+    # def perform_destroy(self, instance):
+    #     title_id = self.kwargs.get("title_id")
+    #     title = get_object_or_404(Title, pk=title_id)
+    #     review_id = self.kwargs.get("review_id")
+    #     review = get_object_or_404(Review, pk=review_id)
+    #
+    #     instance = Review.objects.get(title=title, review=review_id)
+    #     instance.delete()
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly]
 
     def get_queryset(self):
         title_id = self.kwargs['title_id']
@@ -114,6 +138,9 @@ class CommentViewSet(viewsets.ModelViewSet):
         author = self.request.user
         post = get_object_or_404(Title, pk=post_id)
         serializer.save(author=author, post=post)
+
+
+
 
 
 def id_generator(size=20, chars=string.ascii_uppercase + string.digits):
