@@ -5,6 +5,7 @@ import django_filters
 from django.core import exceptions
 from django.core.mail import send_mail
 from django.db.models import Avg
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import status, filters, viewsets
 from rest_framework.decorators import action
@@ -20,8 +21,7 @@ from reviews.models import Review
 from titles.models import Title, Category, Genre
 from users.models import User
 from .filters import TitleFilter
-from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly, IsAdmin, \
-    ReviewPermissions
+from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly, IsAdmin, IsAdminOrStaff
 from .serializers import ReviewSerializer, CommentSerializer, \
     UserEmailSerializer, UserLoginSerializer, UserSerializer, \
     CategorySerializer, GenreSerializer, TitleSerializer
@@ -88,7 +88,7 @@ class GenreViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = [ReviewPermissions, IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrStaff, IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
         title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
@@ -122,6 +122,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
     #
     #     instance = Review.objects.get(title=title, review=review_id)
     #     instance.delete()
+
+    # def destroy(self, request, *args, **kwargs):
+    #     try:
+    #         instance = self.get_object()
+    #         self.perform_destroy(instance)
+    #     except Http404:
+    #         pass
+    #     return Response(status=status.HTTP_204_NO_CONTENT)
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
