@@ -1,6 +1,4 @@
 from rest_framework import serializers
-from rest_framework.fields import CurrentUserDefault
-from rest_framework.validators import UniqueValidator
 
 from reviews.models import Comment, Review
 
@@ -10,14 +8,11 @@ from users.models import User
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-
-
-
-    author = serializers.SlugRelatedField(slug_field='username',
-                                          read_only=True)
+    author = serializers.SlugRelatedField(slug_field='username', read_only=True)
+    title = serializers.SlugRelatedField(slug_field='pk', read_only=True)
 
     class Meta:
-        fields = ('id', 'text', 'author', 'score', 'pub_date')
+        fields = ('id', 'text', 'author', 'score', 'pub_date', 'title')
         model = Review
 
     def validate(self, data):
@@ -55,13 +50,23 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
 
-
 class UserEmailSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
+
+    def validate(self, data):
+        if User.objects.filter(email=self.email).exists():
+            raise serializers.ValidationError("Пользователь с таким email уже зарегестрирован в системе")
+        return data
+
 
 class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
     secret = serializers.CharField(required=True)
+
+    def validate(self, data):
+        if not User.objects.filter(email=self.email).secret == self.secret:
+            raise serializers.ValidationError('Вы отправили неверный секретный код')
+        return data
 
 
 class GenreSerializer(serializers.ModelSerializer):

@@ -1,5 +1,3 @@
-import secrets
-import string
 import uuid
 
 from django.core.mail import send_mail
@@ -10,7 +8,6 @@ import django_filters
 
 from rest_framework import filters, status, viewsets, mixins
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
@@ -92,6 +89,7 @@ class GenreViewSet(mixins.ListModelMixin,
     lookup_field = "slug"
     permission_classes = [IsAdminOrReadOnly]
 
+
 class ReviewViewSet(viewsets.ModelViewSet):
     """Модель обработки отзывов"""
     serializer_class = ReviewSerializer
@@ -101,27 +99,20 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
         return title.reviews.all()
 
-    def perform_create(self, serializer):
+    def serializing_and_rating_calculation(self, serializer):
         title_id = self.kwargs.get("title_id")
         title = get_object_or_404(Title, pk=title_id)
-        # serializer.save(author=self.request.user)
         serializer.is_valid(raise_exception=True)
-
-        # if Review.objects.filter(author=self.request.user,
-        #                          title=title).exists():
-        #     raise ValidationError("Вы уже оставили отзыв")
         serializer.save(author=self.request.user, title=title)
         title.rating = Review.objects.filter(title=title).aggregate(Avg(
             "score"))["score__avg"]
         title.save(update_fields=["rating"])
+
+    def perform_create(self, serializer):
+        self.serializing_and_rating_calculation(serializer)
 
     def perform_update(self, serializer):
-        title_id = self.kwargs.get("title_id")
-        title = get_object_or_404(Title, pk=title_id)
-        serializer.save(author=self.request.user, title=title)
-        title.rating = Review.objects.filter(title=title).aggregate(Avg(
-            "score"))["score__avg"]
-        title.save(update_fields=["rating"])
+        self.serializing_and_rating_calculation(serializer)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -148,15 +139,16 @@ class ConfirmationCodeView(APIView):
         """Обработка POST запроса на получение Confirmation code"""
         serializer = UserEmailSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        secret = str(uuid.uuid1())    # генерация уникального ключа
+        User.objects.create(secret=secret)
         email = serializer.data['email']
-        if User.objects.filter(email=email):
-            return Response('Пользователь уже зарегестрирован в системе',
-                            status=status.HTTP_410_GONE)
-        secret = str(uuid.uuid1())    #генерация уникального ключа
-        User.objects.create(email=email, secret=secret)
-        send_mail('Ваш секретный код', secret,
-                  settings.ADMIN_EMAIL, [email],
-                  fail_silently=False)
+        send_mail(
+            'Ваш секретный код',
+            secret,
+            settings.ADMIN_EMAIL,
+            email,
+            fail_silently=False
+        )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -168,22 +160,17 @@ class UserLoginView(APIView):
         Обработка POST запроса на получение JWT по email и секретному коду
         """
         serializer = UserLoginSerializer(data=request.data)
-        if serializer.is_valid():
-            email = serializer.data['email']
-            secret = serializer.data['secret']
+        serializer.is_valid(raise_exception=True)
+        email = serializer.data['email']
 
-            user = get_object_or_404(User, email=email)
-            if user.secret != secret:
-                return Response('Вы отправили неверный секретный код',
-                                status=status.HTTP_400_BAD_REQUEST)
+        user = get_object_or_404(User, email=email)
 
-            refresh = RefreshToken.for_user(user)  # получаем токен
+        refresh = RefreshToken.for_user(user)  # получаем токен
 
-            return Response(
-                {"access": str(refresh.access_token)},
-                status=status.HTTP_200_OK
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"access": str(refresh.access_token)},
+            status=status.HTTP_200_OK
+        )
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -194,11 +181,9 @@ class UserViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
     lookup_field = "username"
 
-    @action(detail=False, methods=['PATCH', 'GET'],
-            permission_classes=(IsAuthenticated,))
+    @action(detail=False, methods=['PATCH', 'GET'], permission_classes=(IsAuthenticated,))
     def me(self, request):
-        serializer = UserSerializer(request.user,
-                                    data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
+        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
