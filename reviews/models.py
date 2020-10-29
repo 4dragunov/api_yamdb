@@ -24,8 +24,10 @@ class Review(models.Model):
         related_name="reviews",
         verbose_name="Произведение",
     )
-    score = models.IntegerField(
-        validators=[MaxValueValidator(10), MinValueValidator(1)])
+    score = models.PositiveSmallIntegerField(
+        validators=[MaxValueValidator(10, "Оценка не может превышать 10"),
+                    MinValueValidator(1)],
+        verbose_name="Оценка")
 
     class Meta:
         ordering = ["-pub_date"]

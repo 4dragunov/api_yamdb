@@ -8,8 +8,8 @@ from rest_framework.routers import DefaultRouter
 
 
 v1_patterns = ([
-    path('auth/email', ConfirmationCodeView.as_view()),
-    path('auth/token', UserLoginView.as_view()),
+    path('email/', ConfirmationCodeView.as_view()),
+    path('token/', UserLoginView.as_view()),
 ])
 
 v1_router = DefaultRouter()

@@ -161,7 +161,7 @@ class ConfirmationCodeView(APIView):
             secret = id_generator()
             User.objects.create(email=email, secret=secret)
             send_mail('Ваш секретный код', secret,
-                      'admin@yamdb.com', [email],
+                      email, [email],
                       fail_silently=False)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
