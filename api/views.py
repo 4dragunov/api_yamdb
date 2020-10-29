@@ -1,5 +1,6 @@
 import secrets
 import string
+import uuid
 
 from django.core.mail import send_mail
 from django.db.models import Avg
@@ -7,7 +8,7 @@ from django.shortcuts import get_object_or_404
 
 import django_filters
 
-from rest_framework import filters, status, viewsets
+from rest_framework import filters, status, viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
@@ -18,6 +19,7 @@ from rest_framework.views import APIView
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from api_yamdb import settings
 from reviews.models import Review
 
 from titles.models import Category, Genre, Title
@@ -63,7 +65,10 @@ class TitleViewSet(viewsets.ModelViewSet):
                         )
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(mixins.ListModelMixin,
+                      mixins.CreateModelMixin,
+                      mixins.DestroyModelMixin,
+                      viewsets.GenericViewSet):
     """Модель обработки категорий"""
     permission_classes = [IsAdminOrReadOnly]
     queryset = Category.objects.all()
@@ -73,14 +78,11 @@ class CategoryViewSet(viewsets.ModelViewSet):
     search_fields = ['=name']
     lookup_field = "slug"
 
-    def retrieve(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def update(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(mixins.ListModelMixin,
+                   mixins.CreateModelMixin,
+                   mixins.DestroyModelMixin,
+                   viewsets.GenericViewSet):
     """Модель обработки жанров"""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
@@ -89,13 +91,6 @@ class GenreViewSet(viewsets.ModelViewSet):
     search_fields = ['=name']
     lookup_field = "slug"
     permission_classes = [IsAdminOrReadOnly]
-
-    def retrieve(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def update(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """Модель обработки отзывов"""
@@ -109,9 +104,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         title_id = self.kwargs.get("title_id")
         title = get_object_or_404(Title, pk=title_id)
-        if Review.objects.filter(author=self.request.user,
-                                 title=title).exists():
-            raise ValidationError("Вы уже оставили отзыв")
+        # serializer.save(author=self.request.user)
+        serializer.is_valid(raise_exception=True)
+
+        # if Review.objects.filter(author=self.request.user,
+        #                          title=title).exists():
+        #     raise ValidationError("Вы уже оставили отзыв")
         serializer.save(author=self.request.user, title=title)
         title.rating = Review.objects.filter(title=title).aggregate(Avg(
             "score"))["score__avg"]
@@ -144,27 +142,22 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, review=review)
 
 
-def id_generator(size=20, chars=string.ascii_uppercase + string.digits):
-    return ''.join(secrets.choice(chars) for _ in range(size))
-
-
 class ConfirmationCodeView(APIView):
 
     def post(self, request):
         """Обработка POST запроса на получение Confirmation code"""
         serializer = UserEmailSerializer(data=request.data)
-        if serializer.is_valid():
-            email = serializer.data['email']
-            if User.objects.filter(email=email):
-                return Response('Пользователь уже зарегестрирован в системе',
-                                status=status.HTTP_410_GONE)
-            secret = id_generator()
-            User.objects.create(email=email, secret=secret)
-            send_mail('Ваш секретный код', secret,
-                      email, [email],
-                      fail_silently=False)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.data['email']
+        if User.objects.filter(email=email):
+            return Response('Пользователь уже зарегестрирован в системе',
+                            status=status.HTTP_410_GONE)
+        secret = str(uuid.uuid1())    #генерация уникального ключа
+        User.objects.create(email=email, secret=secret)
+        send_mail('Ваш секретный код', secret,
+                  settings.ADMIN_EMAIL, [email],
+                  fail_silently=False)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class UserLoginView(APIView):
@@ -197,13 +190,13 @@ class UserViewSet(viewsets.ModelViewSet):
     """Модель обработки запросов пользователя"""
     serializer_class = UserSerializer
     queryset = User.objects.all()
-    permission_classes = (IsAdmin, IsAuthenticated,)
+    permission_classes = (IsAdmin, IsAuthenticated)
     pagination_class = PageNumberPagination
     lookup_field = "username"
 
     @action(detail=False, methods=['PATCH', 'GET'],
             permission_classes=(IsAuthenticated,))
-    def me(self, request, ):
+    def me(self, request):
         serializer = UserSerializer(request.user,
                                     data=request.data, partial=True)
         if serializer.is_valid():

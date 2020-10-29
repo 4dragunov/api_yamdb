@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from rest_framework.fields import CurrentUserDefault
+from rest_framework.validators import UniqueValidator
 
 from reviews.models import Comment, Review
 
@@ -8,12 +10,25 @@ from users.models import User
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+
+
+
     author = serializers.SlugRelatedField(slug_field='username',
                                           read_only=True)
 
     class Meta:
         fields = ('id', 'text', 'author', 'score', 'pub_date')
         model = Review
+
+    def validate(self, data):
+        author = self.context["request"].user
+        title_id = self.context.get('request').parser_context['kwargs'][
+            'title_id']
+        if (Review.objects.filter(author=author, title=title_id).exists() and
+                self.context["request"].method != "PATCH"):
+            raise serializers.ValidationError("Вы уже оставили отзыв")
+
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -26,6 +41,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = User
         fields = (
@@ -39,9 +55,9 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
 
+
 class UserEmailSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
-
 
 class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)

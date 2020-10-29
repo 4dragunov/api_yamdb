@@ -8,8 +8,8 @@ from rest_framework.routers import DefaultRouter
 
 
 v1_patterns = ([
-    path('email/', ConfirmationCodeView.as_view()),
-    path('token/', UserLoginView.as_view()),
+    path('email', ConfirmationCodeView.as_view()),
+    path('token', UserLoginView.as_view()),
 ])
 
 v1_router = DefaultRouter()
@@ -27,6 +27,6 @@ v1_router.register(r'categories', CategoryViewSet)
 v1_router.register(r'genres', GenreViewSet)
 
 urlpatterns = [
-    path('v1/', include(v1_patterns)),
+    path('v1/auth/', include(v1_patterns)),
     path('v1/', include(v1_router.urls)),
 ]
