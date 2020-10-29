@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 
 import django_filters
 
-from rest_framework import filters, status, viewsets
+from rest_framework import filters, status, viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
@@ -63,7 +63,10 @@ class TitleViewSet(viewsets.ModelViewSet):
                         )
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(mixins.ListModelMixin,
+                      mixins.CreateModelMixin,
+                      mixins.DestroyModelMixin,
+                      viewsets.GenericViewSet):
     """Модель обработки категорий"""
     permission_classes = [IsAdminOrReadOnly]
     queryset = Category.objects.all()
@@ -73,14 +76,11 @@ class CategoryViewSet(viewsets.ModelViewSet):
     search_fields = ['=name']
     lookup_field = "slug"
 
-    def retrieve(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def update(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(mixins.ListModelMixin,
+                   mixins.CreateModelMixin,
+                   mixins.DestroyModelMixin,
+                   viewsets.GenericViewSet):
     """Модель обработки жанров"""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
@@ -89,12 +89,6 @@ class GenreViewSet(viewsets.ModelViewSet):
     search_fields = ['=name']
     lookup_field = "slug"
     permission_classes = [IsAdminOrReadOnly]
-
-    def retrieve(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def update(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -109,9 +103,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         title_id = self.kwargs.get("title_id")
         title = get_object_or_404(Title, pk=title_id)
-        if Review.objects.filter(author=self.request.user,
-                                 title=title).exists():
-            raise ValidationError("Вы уже оставили отзыв")
+        # if Review.objects.filter(author=self.request.user,
+        #                          title=title).exists():
+        #     raise ValidationError("Вы уже оставили отзыв")
         serializer.save(author=self.request.user, title=title)
         title.rating = Review.objects.filter(title=title).aggregate(Avg(
             "score"))["score__avg"]
