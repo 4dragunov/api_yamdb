@@ -150,3 +150,4 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=300),
 }
 
+email = 'admin@yamdb.com'
