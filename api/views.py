@@ -45,7 +45,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         """"Создание нового произведения, возможно только администротором"""
         category_slug = self.request.data['category']
         category = get_object_or_404(Category, slug=category_slug)
-        genre_slug = self.request.POST.getlist("genre")
+        genre_slug = self.request.POST.getlist('genre')
         genres = Genre.objects.filter(slug__in=genre_slug)
         serializer.save(category=category,
                         genre=genres
@@ -56,7 +56,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         возможно только администротором"""
         category_slug = self.request.data['category']
         category = get_object_or_404(Category, slug=category_slug)
-        genre_slug = self.request.POST.getlist("genre")
+        genre_slug = self.request.POST.getlist('genre')
         genres = Genre.objects.filter(slug__in=genre_slug)
         serializer.save(category=category,
                         genre=genres
@@ -97,17 +97,17 @@ class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrStaff, IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
         return title.reviews.all()
 
     def serializing_and_rating_calculation(self, serializer):
-        title_id = self.kwargs.get("title_id")
+        title_id = self.kwargs.get('title_id')
         title = get_object_or_404(Title, pk=title_id)
         serializer.is_valid(raise_exception=True)
         serializer.save(author=self.request.user, title=title)
         title.rating = Review.objects.filter(title=title).aggregate(Avg(
-            "score"))["score__avg"]
-        title.save(update_fields=["rating"])
+            'score'))['score__avg']
+        title.save(update_fields=['rating'])
 
     def perform_create(self, serializer):
         self.serializing_and_rating_calculation(serializer)
@@ -125,14 +125,14 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrStaff, IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        title_id = self.kwargs.get("title_id")
-        review_id = self.kwargs.get("review_id")
+        title_id = self.kwargs.get('title_id')
+        review_id = self.kwargs.get('review_id')
         review = get_object_or_404(Review, pk=review_id, title__id=title_id)
         return review.comments.all()
 
     def perform_create(self, serializer):
-        title_id = self.kwargs.get("title_id")
-        review_id = self.kwargs.get("review_id")
+        title_id = self.kwargs.get('title_id')
+        review_id = self.kwargs.get('review_id')
         review = get_object_or_404(Review, pk=review_id, title__id=title_id)
         serializer.save(author=self.request.user, review=review)
 
