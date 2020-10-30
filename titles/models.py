@@ -15,8 +15,6 @@ class Category(models.Model):
         ordering = ["-name"]
 
 
-
-
 class Genre(models.Model):
     name = models.CharField(max_length=100, verbose_name="Название жанра",
                             blank=False)
@@ -27,8 +25,6 @@ class Genre(models.Model):
 
     class Meta:
         ordering = ["-name"]
-
-
 
 
 class Title(models.Model):
@@ -53,6 +49,3 @@ class Title(models.Model):
 
     class Meta:
         ordering = ["-rating"]
-
-
-

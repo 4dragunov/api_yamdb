@@ -8,7 +8,8 @@ from users.models import User
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    author = serializers.SlugRelatedField(slug_field='username', read_only=True)
+    author = serializers.SlugRelatedField(slug_field='username',
+                                          read_only=True)
     title = serializers.SlugRelatedField(slug_field='pk', read_only=True)
 
     class Meta:
@@ -17,8 +18,6 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         author = self.context["request"].user
-        # title_id = self.context.get('request').parser_context['kwargs'][
-        #     'title_id']
         title_id = self.context.get('title_id')
         if (Review.objects.filter(author=author, title=title_id).exists() and
                 self.context["request"].method != "PATCH"):
@@ -55,13 +54,9 @@ class UserEmailSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
 
     def validate(self, data):
-        print(data['email'])
-        # # email = self.context["request"].user
-        # print(data['email'])
-        # raise serializers.ValidationError("Вы уже sdfasdfsadfsdf отзыв")
         if User.objects.filter(email=data['email']).exists():
             raise serializers.ValidationError("Пользователь с таким email "
-                                               "уже зарегестрирован в системе")
+                                              "уже зарегестрирован в системе")
         return data
 
 
@@ -71,7 +66,7 @@ class UserLoginSerializer(serializers.Serializer):
 
     def validate(self, data):
         if not User.objects.filter(email=self.email).secret == self.secret:
-            raise serializers.ValidationError('Вы отправили неверный секретный код')
+            raise serializers.ValidationError('Вы отправили неверный код')
         return data
 
 

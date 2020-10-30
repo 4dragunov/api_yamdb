@@ -1,12 +1,14 @@
 import uuid
 
+from api_yamdb import settings
+
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 
 import django_filters
 
-from rest_framework import filters, status, viewsets, mixins
+from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import (IsAuthenticated,
@@ -16,7 +18,6 @@ from rest_framework.views import APIView
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from api_yamdb import settings
 from reviews.models import Review
 
 from titles.models import Category, Genre, Title
@@ -25,7 +26,6 @@ from users.models import User
 
 from .filters import TitleFilter
 from .permissions import IsAdmin, IsAdminOrReadOnly, IsAdminOrStaff
-
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer,
                           TitleSerializer, UserEmailSerializer,
@@ -143,14 +143,14 @@ class ConfirmationCodeView(APIView):
         """Обработка POST запроса на получение Confirmation code"""
         serializer = UserEmailSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        secret = str(uuid.uuid1())    # генерация уникального ключа
-        User.objects.create(secret=secret)
         email = serializer.data['email']
+        secret = str(uuid.uuid1())    # генерация уникального ключа
+        User.objects.create(email=email, secret=secret)
         send_mail(
             'Ваш секретный код',
             secret,
             settings.ADMIN_EMAIL,
-            email,
+            [email],
             fail_silently=False
         )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -185,9 +185,11 @@ class UserViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
     lookup_field = "username"
 
-    @action(detail=False, methods=['PATCH', 'GET'], permission_classes=(IsAuthenticated,))
+    @action(detail=False, methods=['PATCH', 'GET'],
+            permission_classes=(IsAuthenticated,))
     def me(self, request):
-        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        serializer = UserSerializer(request.user, data=request.data,
+                                    partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
