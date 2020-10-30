@@ -25,6 +25,7 @@ from users.models import User
 
 from .filters import TitleFilter
 from .permissions import IsAdmin, IsAdminOrReadOnly, IsAdminOrStaff
+
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer,
                           TitleSerializer, UserEmailSerializer,
@@ -113,6 +114,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         self.serializing_and_rating_calculation(serializer)
+
+    def get_serializer_context(self):
+        return {'title_id': self.kwargs['title_id'], 'request': self.request}
 
 
 class CommentViewSet(viewsets.ModelViewSet):

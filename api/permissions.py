@@ -1,14 +1,10 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
-from users.models import UserRole
-
 
 class IsAdmin(BasePermission):
     def has_permission(self, request, view):
         if not request.user.is_anonymous:
-            return (request.user.role == UserRole.ADMIN or
-                    request.user.is_superuser)
-        return False
+            return request.user.is_admin
 
 
 class IsAdminOrReadOnly(BasePermission):
@@ -18,7 +14,7 @@ class IsAdminOrReadOnly(BasePermission):
 
         if request.user.is_anonymous:
             return False
-        return request.user.role == UserRole.ADMIN or request.user.is_superuser
+        return request.user.is_admin
 
 
 class IsAdminOrStaff(BasePermission):
@@ -29,6 +25,4 @@ class IsAdminOrStaff(BasePermission):
         if request.user.is_anonymous:
             return False
         return (obj.author == request.user or
-                request.user.role == UserRole.ADMIN or
-                request.user.role == UserRole.MODERATOR or
-                request.user.is_superuser)
+               request.user.is_admin or request.user.is_moderator)

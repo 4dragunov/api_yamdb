@@ -11,6 +11,9 @@ class Category(models.Model):
     def __str__(self):
         return self.slug
 
+    class Meta:
+        ordering = ["-name"]
+
 
 
 
@@ -22,6 +25,9 @@ class Genre(models.Model):
     def __str__(self):
         return self.slug
 
+    class Meta:
+        ordering = ["-name"]
+
 
 
 
@@ -32,7 +38,7 @@ class Title(models.Model):
     rating = models.PositiveSmallIntegerField(
         validators=[MaxValueValidator(10, "Рейтинг не может быть выше 10"),
                     MinValueValidator(1)], null=True,
-        verbose_name="Рейтинг")
+        verbose_name="Рейтинг",)
     description = models.TextField(max_length=1000,
                                    verbose_name="Краткое описание")
     genre = models.ManyToManyField(Genre)
@@ -44,6 +50,9 @@ class Title(models.Model):
         verbose_name="Категория"
     )
     slug = models.SlugField(max_length=40)
+
+    class Meta:
+        ordering = ["-rating"]
 
 
 
