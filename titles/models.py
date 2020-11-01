@@ -28,13 +28,19 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
-    name = models.CharField(max_length=100,
-                            verbose_name='Название произведения',)
+    name = models.CharField(
+        max_length=100,
+        verbose_name='Название произведения',
+    )
     year = models.PositiveIntegerField(default=datetime.datetime.now().year)
     rating = models.PositiveSmallIntegerField(
-        validators=[MaxValueValidator(10, 'Рейтинг не может быть выше 10'),
-                    MinValueValidator(1)], null=True,
-        verbose_name="Рейтинг",)
+        validators=[
+            MaxValueValidator(10, 'Рейтинг не может быть выше 10'),
+            MinValueValidator(1),
+        ],
+        null=True,
+        verbose_name="Рейтинг",
+    )
     description = models.TextField(max_length=1000,
                                    verbose_name='Краткое описание',)
     genre = models.ManyToManyField(Genre)
