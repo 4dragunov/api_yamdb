@@ -11,26 +11,48 @@ class UserRole(models.TextChoices):
 
 class User(AbstractUser):
     """Расширение стандартной модели пользователя Django"""
-    bio = models.TextField(blank=True)
-    email = models.EmailField(blank=False, unique=True,
-                              validators=[validate_email],)
+    bio = models.TextField(
+        blank=True,
+    )
+    email = models.EmailField(
+        blank=False,
+        unique=True,
+        validators=[validate_email],
+    )
     role = models.CharField(
-        max_length=150, blank=False, choices=UserRole.choices,
+        max_length=150,
+        blank=False,
+        choices=UserRole.choices,
         default=UserRole.USER,
     )
-    secret = models.CharField(max_length=20)
-    username = models.CharField(max_length=150,
-                                blank=True,
-                                null=True,
-                                unique=True,
-                                db_index=True,)
+    secret = models.CharField(
+        max_length=20,
+    )
+    username = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        unique=True,
+        db_index=True,
+    )
 
     @property
     def is_admin(self):
-        if self.role == UserRole.ADMIN or self.is_superuser:
+        if (
+                self.role == UserRole.ADMIN
+                or self.is_superuser
+        ):
             return True
 
     @property
     def is_moderator(self):
-        if self.role == UserRole.MODERATOR or self.is_superuser:
+        if (
+                self.role == UserRole.MODERATOR
+                or self.is_superuser
+        ):
             return True
+
+    class Meta:
+        ordering = (
+            '-username',
+        )

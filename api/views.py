@@ -39,17 +39,16 @@ class TitleViewSet(viewsets.ModelViewSet):
         category = get_object_or_404(Category, slug=category_slug)
         genre_slug = self.request.POST.getlist('genre')
         genres = Genre.objects.filter(slug__in=genre_slug)
-        serializer.save(category=category,
-                        genre=genres,
-                        )
-
+        serializer.save(
+            category=category,
+            genre=genres,
+        )
 
     def perform_create(self, serializer):
         """"
         Создание нового произведения, возможно только администротором
         """
         self.category_genre_perform(serializer)
-
 
     def perform_update(self, serializer):
         """"
@@ -58,10 +57,13 @@ class TitleViewSet(viewsets.ModelViewSet):
         """
         self.category_genre_perform(serializer)
 
-class GenreCategoryMixinViewSet(mixins.ListModelMixin,
-                   mixins.CreateModelMixin,
-                   mixins.DestroyModelMixin,
-                   viewsets.GenericViewSet):
+
+class GenreCategoryMixinViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
     """Миксин для классов жанров и категорий"""
     queryset = None
     serializer_class = None
@@ -70,6 +72,7 @@ class GenreCategoryMixinViewSet(mixins.ListModelMixin,
     search_fields = ['=name']
     lookup_field = "slug"
     permission_classes = [IsAdminOrReadOnly]
+
 
 class CategoryViewSet(GenreCategoryMixinViewSet):
     """Модель обработки категорий"""
@@ -97,8 +100,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title = get_object_or_404(Title, pk=title_id)
         serializer.is_valid(raise_exception=True)
         serializer.save(author=self.request.user, title=title)
-        title.rating = Review.objects.filter(title=title).aggregate(Avg(
-            'score'))['score__avg']
+        title.rating = Review.objects.filter(title=title).aggregate(Avg('score'))['score__avg']
         title.save(update_fields=['rating'])
 
     def perform_create(self, serializer):
@@ -128,8 +130,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         review = self.get_review()
-        serializer.save(author=self.request.user,
-                        review=review)
+        serializer.save(author=self.request.user, review=review)
 
 
 class ConfirmationCodeView(APIView):
@@ -139,14 +140,14 @@ class ConfirmationCodeView(APIView):
         serializer = UserEmailSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         email = serializer.data['email']
-        secret = str(uuid1())    # генерация уникального ключа
+        secret = str(uuid1())  # генерация уникального ключа
         User.objects.create(email=email, secret=secret)
         send_mail(
             'Ваш секретный код',
             secret,
             settings.ADMIN_EMAIL,
             [email],
-            fail_silently=False
+            fail_silently=False,
         )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -168,7 +169,7 @@ class UserLoginView(APIView):
 
         return Response(
             {"access": str(refresh.access_token)},
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )
 
 
@@ -180,11 +181,14 @@ class UserViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
     lookup_field = "username"
 
-    @action(detail=False, methods=['PATCH', 'GET'],
-            permission_classes=(IsAuthenticated,))
+    @action(
+        detail=False, methods=['PATCH', 'GET'],
+        permission_classes=(
+                IsAuthenticated,
+        )
+    )
     def me(self, request):
-        serializer = UserSerializer(request.user, data=request.data,
-                                    partial=True)
+        serializer = UserSerializer(request.user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)

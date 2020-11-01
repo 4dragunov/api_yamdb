@@ -5,26 +5,42 @@ from django.db import models
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=100, verbose_name='Название категории')
-    slug = models.SlugField(max_length=40, unique=True)
+    name = models.CharField(
+        max_length=100,
+        verbose_name='Название категории',
+    )
+    slug = models.SlugField(
+        max_length=40,
+        unique=True,
+    )
 
     def __str__(self):
         return self.slug
 
     class Meta:
-        ordering = ('-name',)
+        ordering = (
+            '-name',
+        )
 
 
 class Genre(models.Model):
-    name = models.CharField(max_length=100, verbose_name='Название жанра',
-                            blank=False,)
-    slug = models.SlugField(max_length=40, unique=True)
+    name = models.CharField(
+        max_length=100,
+        verbose_name='Название жанра',
+        blank=False,
+    )
+    slug = models.SlugField(
+        max_length=40,
+        unique=True,
+    )
 
     def __str__(self):
         return self.slug
 
     class Meta:
-        ordering = ('-name',)
+        ordering = (
+            '-name',
+        )
 
 
 class Title(models.Model):
@@ -32,7 +48,9 @@ class Title(models.Model):
         max_length=100,
         verbose_name='Название произведения',
     )
-    year = models.PositiveIntegerField(default=datetime.datetime.now().year)
+    year = models.PositiveIntegerField(
+        default=datetime.datetime.now().year,
+    )
     rating = models.PositiveSmallIntegerField(
         validators=[
             MaxValueValidator(10, 'Рейтинг не может быть выше 10'),
@@ -41,8 +59,10 @@ class Title(models.Model):
         null=True,
         verbose_name="Рейтинг",
     )
-    description = models.TextField(max_length=1000,
-                                   verbose_name='Краткое описание',)
+    description = models.TextField(
+        max_length=1000,
+        verbose_name='Краткое описание',
+    )
     genre = models.ManyToManyField(Genre)
     category = models.ForeignKey(
         Category,
@@ -54,4 +74,6 @@ class Title(models.Model):
     slug = models.SlugField(max_length=40)
 
     class Meta:
-        ordering = ('-rating',)
+        ordering = (
+            '-rating',
+        )
