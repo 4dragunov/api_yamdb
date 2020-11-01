@@ -43,13 +43,11 @@ class TitleViewSet(viewsets.ModelViewSet):
                         genre=genres,
                         )
 
-
     def perform_create(self, serializer):
         """"
         Создание нового произведения, возможно только администротором
         """
         self.category_genre_perform(serializer)
-
 
     def perform_update(self, serializer):
         """"
@@ -58,10 +56,11 @@ class TitleViewSet(viewsets.ModelViewSet):
         """
         self.category_genre_perform(serializer)
 
+
 class GenreCategoryMixinViewSet(mixins.ListModelMixin,
-                   mixins.CreateModelMixin,
-                   mixins.DestroyModelMixin,
-                   viewsets.GenericViewSet):
+                                mixins.CreateModelMixin,
+                                mixins.DestroyModelMixin,
+                                viewsets.GenericViewSet):
     """Миксин для классов жанров и категорий"""
     queryset = None
     serializer_class = None
@@ -70,6 +69,7 @@ class GenreCategoryMixinViewSet(mixins.ListModelMixin,
     search_fields = ['=name']
     lookup_field = "slug"
     permission_classes = [IsAdminOrReadOnly]
+
 
 class CategoryViewSet(GenreCategoryMixinViewSet):
     """Модель обработки категорий"""
@@ -139,7 +139,7 @@ class ConfirmationCodeView(APIView):
         serializer = UserEmailSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         email = serializer.data['email']
-        secret = str(uuid1())    # генерация уникального ключа
+        secret = str(uuid1())  # генерация уникального ключа
         User.objects.create(email=email, secret=secret)
         send_mail(
             'Ваш секретный код',

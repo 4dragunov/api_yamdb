@@ -5,7 +5,10 @@ from django.db import models
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=100, verbose_name='Название категории')
+    name = models.CharField(
+        max_length=100,
+        verbose_name='Название категории',
+    )
     slug = models.SlugField(max_length=40, unique=True)
 
     def __str__(self):
@@ -16,8 +19,11 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
-    name = models.CharField(max_length=100, verbose_name='Название жанра',
-                            blank=False,)
+    name = models.CharField(
+        max_length=100,
+        verbose_name='Название жанра',
+        blank=False,
+    )
     slug = models.SlugField(max_length=40, unique=True)
 
     def __str__(self):
@@ -28,15 +34,23 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
-    name = models.CharField(max_length=100,
-                            verbose_name='Название произведения',)
+    name = models.CharField(
+        max_length=100,
+        verbose_name='Название произведения',
+    )
     year = models.PositiveIntegerField(default=datetime.datetime.now().year)
     rating = models.PositiveSmallIntegerField(
-        validators=[MaxValueValidator(10, 'Рейтинг не может быть выше 10'),
-                    MinValueValidator(1)], null=True,
-        verbose_name="Рейтинг",)
-    description = models.TextField(max_length=1000,
-                                   verbose_name='Краткое описание',)
+        validators=[
+            MaxValueValidator(10, 'Рейтинг не может быть выше 10'),
+            MinValueValidator(1),
+        ],
+        null=True,
+        verbose_name="Рейтинг",
+    )
+    description = models.TextField(
+        max_length=1000,
+        verbose_name='Краткое описание',
+    )
     genre = models.ManyToManyField(Genre)
     category = models.ForeignKey(
         Category,
