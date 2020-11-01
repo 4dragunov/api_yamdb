@@ -12,7 +12,7 @@ class Category(models.Model):
         return self.slug
 
     class Meta:
-        ordering = ['-name']
+        ordering = ('-name',)
 
 
 class Genre(models.Model):
@@ -24,7 +24,7 @@ class Genre(models.Model):
         return self.slug
 
     class Meta:
-        ordering = ['-name']
+        ordering = ('-name',)
 
 
 class Title(models.Model):
@@ -48,4 +48,4 @@ class Title(models.Model):
     slug = models.SlugField(max_length=40)
 
     class Meta:
-        ordering = ['-rating']
+        ordering = ('-rating',)

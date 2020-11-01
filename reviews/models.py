@@ -2,7 +2,6 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from titles.models import Title
-
 from users.models import User
 
 
@@ -30,7 +29,7 @@ class Review(models.Model):
         verbose_name='Оценка',)
 
     class Meta:
-        ordering = ['-pub_date']
+        ordering = ('-pub_date',)
 
 
 class Comment(models.Model):

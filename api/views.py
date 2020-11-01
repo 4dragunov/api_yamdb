@@ -1,13 +1,10 @@
-import uuid
+from uuid import uuid1
 
+from django_filters.rest_framework import DjangoFilterBackend
 from api_yamdb import settings
-
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-
-import django_filters
-
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
@@ -15,21 +12,17 @@ from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Review
-
 from titles.models import Category, Genre, Title
-
 from users.models import User
-
 from .filters import TitleFilter
 from .permissions import IsAdmin, IsAdminOrReadOnly, IsAdminOrStaff
 from .serializers import (CategorySerializer, CommentSerializer,
-                          GenreSerializer, ReviewSerializer,
-                          TitleSerializer, UserEmailSerializer,
-                          UserLoginSerializer, UserSerializer)
+                          GenreSerializer, ReviewSerializer, TitleSerializer,
+                          UserEmailSerializer, UserLoginSerializer,
+                          UserSerializer)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -37,58 +30,57 @@ class TitleViewSet(viewsets.ModelViewSet):
     serializer_class = TitleSerializer
     queryset = Title.objects.all()
     pagination_class = PageNumberPagination
-    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend]
     filterset_class = TitleFilter
     permission_classes = [IsAdminOrReadOnly]
 
-    def perform_create(self, serializer):
-        """"Создание нового произведения, возможно только администротором"""
+    def category_genre_perform(self, serializer):
         category_slug = self.request.data['category']
         category = get_object_or_404(Category, slug=category_slug)
         genre_slug = self.request.POST.getlist('genre')
         genres = Genre.objects.filter(slug__in=genre_slug)
         serializer.save(category=category,
-                        genre=genres
+                        genre=genres,
                         )
+
+
+    def perform_create(self, serializer):
+        """"
+        Создание нового произведения, возможно только администротором
+        """
+        self.category_genre_perform(serializer)
+
 
     def perform_update(self, serializer):
-        """"Изменение характеристик существующего произведения,
-        возможно только администротором"""
-        category_slug = self.request.data['category']
-        category = get_object_or_404(Category, slug=category_slug)
-        genre_slug = self.request.POST.getlist('genre')
-        genres = Genre.objects.filter(slug__in=genre_slug)
-        serializer.save(category=category,
-                        genre=genres
-                        )
+        """"
+        Изменение характеристик существующего произведения,
+        возможно только администротором
+        """
+        self.category_genre_perform(serializer)
 
-
-class CategoryViewSet(mixins.ListModelMixin,
-                      mixins.CreateModelMixin,
-                      mixins.DestroyModelMixin,
-                      viewsets.GenericViewSet):
-    """Модель обработки категорий"""
-    permission_classes = [IsAdminOrReadOnly]
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-    pagination_class = PageNumberPagination
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['=name']
-    lookup_field = "slug"
-
-
-class GenreViewSet(mixins.ListModelMixin,
+class GenreCategoryMixinViewSet(mixins.ListModelMixin,
                    mixins.CreateModelMixin,
                    mixins.DestroyModelMixin,
                    viewsets.GenericViewSet):
-    """Модель обработки жанров"""
-    queryset = Genre.objects.all()
-    serializer_class = GenreSerializer
+    """Миксин для классов жанров и категорий"""
+    queryset = None
+    serializer_class = None
     pagination_class = PageNumberPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ['=name']
     lookup_field = "slug"
     permission_classes = [IsAdminOrReadOnly]
+
+class CategoryViewSet(GenreCategoryMixinViewSet):
+    """Модель обработки категорий"""
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+
+class GenreViewSet(GenreCategoryMixinViewSet):
+    """Модель обработки жанров"""
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -124,17 +116,20 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [IsAdminOrStaff, IsAuthenticatedOrReadOnly]
 
-    def get_queryset(self):
+    def get_review(self):
         title_id = self.kwargs.get('title_id')
         review_id = self.kwargs.get('review_id')
         review = get_object_or_404(Review, pk=review_id, title__id=title_id)
+        return review
+
+    def get_queryset(self):
+        review = self.get_review()
         return review.comments.all()
 
     def perform_create(self, serializer):
-        title_id = self.kwargs.get('title_id')
-        review_id = self.kwargs.get('review_id')
-        review = get_object_or_404(Review, pk=review_id, title__id=title_id)
-        serializer.save(author=self.request.user, review=review)
+        review = self.get_review()
+        serializer.save(author=self.request.user,
+                        review=review)
 
 
 class ConfirmationCodeView(APIView):
@@ -144,7 +139,7 @@ class ConfirmationCodeView(APIView):
         serializer = UserEmailSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         email = serializer.data['email']
-        secret = str(uuid.uuid1())    # генерация уникального ключа
+        secret = str(uuid1())    # генерация уникального ключа
         User.objects.create(email=email, secret=secret)
         send_mail(
             'Ваш секретный код',
