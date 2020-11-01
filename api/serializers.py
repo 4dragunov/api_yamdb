@@ -6,7 +6,8 @@ from users.models import User
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    author = serializers.SlugRelatedField(slug_field='username', read_only=True)
+    author = serializers.SlugRelatedField(slug_field='username',
+                                          read_only=True)
     title = serializers.SlugRelatedField(slug_field='pk', read_only=True)
 
     class Meta:
@@ -16,16 +17,15 @@ class ReviewSerializer(serializers.ModelSerializer):
     def validate(self, data):
         author = self.context['request'].user
         title_id = self.context.get('title_id')
-        if (
-                Review.objects.filter(author=author, title=title_id).exists()
-                and self.context['request'].method != 'PATCH'
-        ):
+        if (Review.objects.filter(author=author, title=title_id).exists()
+                and self.context['request'].method != 'PATCH'):
             raise serializers.ValidationError('Вы уже оставили отзыв')
         return data
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = serializers.SlugRelatedField(slug_field='username', read_only=True,)
+    author = serializers.SlugRelatedField(slug_field='username',
+                                          read_only=True,)
 
     class Meta:
         fields = ('id', 'text', 'author', 'pub_date')
@@ -36,7 +36,13 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'role', 'email', 'first_name', 'last_name', 'bio')
+        fields = ('id',
+                  'username',
+                  'role',
+                  'email',
+                  'first_name',
+                  'last_name',
+                  'bio',)
 
 
 class UserEmailSerializer(serializers.Serializer):
@@ -44,7 +50,8 @@ class UserEmailSerializer(serializers.Serializer):
 
     def validate(self, data):
         if User.objects.filter(email=data['email']).exists():
-            raise serializers.ValidationError('Пользователь с таким email уже зарегестрирован в системе')
+            raise serializers.ValidationError('Пользователь с таким email уже '
+                                              'зарегестрирован в системе')
         return data
 
 
@@ -75,5 +82,11 @@ class TitleSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(read_only=True, many=True)
 
     class Meta:
-        fields = ('id', 'name', 'category', 'genre', 'year', 'description', 'rating')
+        fields = ('id',
+                  'name',
+                  'category',
+                  'genre',
+                  'year',
+                  'description',
+                  'rating',)
         model = Title

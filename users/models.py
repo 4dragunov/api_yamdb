@@ -38,18 +38,12 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
-        if (
-                self.role == UserRole.ADMIN
-                or self.is_superuser
-        ):
+        if self.role == UserRole.ADMIN or self.is_superuser:
             return True
 
     @property
     def is_moderator(self):
-        if (
-                self.role == UserRole.MODERATOR
-                or self.is_superuser
-        ):
+        if self.role == UserRole.MODERATOR or self.is_superuser:
             return True
 
     class Meta:
