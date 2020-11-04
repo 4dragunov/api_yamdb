@@ -60,7 +60,10 @@ class UserLoginSerializer(serializers.Serializer):
     secret = serializers.CharField(required=True)
 
     def validate(self, data):
-        if not User.objects.filter(email=self.email).secret == self.secret:
+        email = data['email']
+        secret = data['secret']
+        if not User.objects.filter(email=email,
+                                   secret=secret).exists():
             raise serializers.ValidationError('Вы отправили неверный код')
         return data
 
