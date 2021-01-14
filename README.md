@@ -2,6 +2,13 @@
 ### Описание
 Проект YaMDb собирает отзывы пользователей на произведения. Произведения делятся на категории: «Книги», «Фильмы», «Музыка».
 
+### Как развернуть проект
+- git clone https://github.com/4dragunov/praktikum_REST_API.git
+- python -m venv venv
+- source venv/bin/activate
+- pip install -r requirements.txt
+- python manage.py migrate
+- python manage.py runserver
 ### Алгоритм регистрации пользователей
 - Пользователь отправляет запрос с параметром email на /auth/email/.
 - YaMDB отправляет письмо с кодом подтверждения (confirmation_code) на адрес email .
